@@ -1,0 +1,82 @@
+﻿@model bookTask.ViewModel.BorrowViewModel
+
+<h1>Borrow a Book</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="bookId">Select a Book:</label>
+        <select class="form-control" id="bookId" name="BookId">
+            <option value="">-- Select a Book --</option>
+            @foreach (var book in ViewBag.Books)
+            {
+                <option value="@book.BookId">@book.BookCode</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="versions">Select the Number of Versions:</label>
+        <select class="form-control" id="versions" name="Versions">
+            <option value="">-- Select the Number of Versions --</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="borrowerId">Select a Borrower:</label>
+        <select class="form-control" id="borrowerId" name="BorrowerId">
+            <option value="">-- Select a Borrower --</option>
+            @foreach (var borrower in ViewBag.Borrowers)
+            {
+                <option value="@borrower.BorrowerId">@borrower.Name</option>
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Borrow Book</button>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger mt-3">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
+
+@section scripts {
+    <script>
+        $(function () {
+            $('#bookId').change(function () {
+                var bookId = $(this).val();
+                if (bookId) {
+                    $.ajax({
+                        url: '/Book/GetVersions',
+                        type: 'GET',
+                        data: { bookId: bookId },
+                        success: function (versions) {
+                            $('#versions').empty();
+                            if (versions.length > 0) {
+                                $.each(versions, function (i, version) {
+                                    $('#versions').append($('<option>', {
+                                        value: version,
+                                        text: version
+                                    }));
+                                });
+                            } else {
+                                $('#versions').append($('<option>', {
+                                    value: '',
+                                    text: '-- No Versions Available --'
+                                }));
+                            }
+                        }
+                    });
+                } else {
+                    $('#versions').empty();
+                    $('#versions').append($('<option>', {
+                        value: '',
+                        text: '-- Select the Number of Versions --'
+                    }));
+                }
+            });
+        });
+    </script>
+}

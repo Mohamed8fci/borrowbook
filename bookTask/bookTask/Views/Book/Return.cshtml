@@ -1,0 +1,72 @@
+﻿@model IEnumerable<bookTask.Models.BorrowedBook>
+
+<h1>Return a Book</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="borrowedBookId">Select a Borrowed Book:</label>
+        <select class="form-control" id="borrowedBookId" name="BorrowedBookId">
+            <option value="">-- Select a Borrowed Book --</option>
+            @foreach (var borrowedBook in ViewBag.BorrowedBooks)
+            {
+                <option value="@borrowedBook.BorrowedBookId">@borrowedBook.Book.BookCode - Version @borrowedBook.BorrowedVersions</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="returnVersions">Select the Number of Versions to Return:</label>
+        <select class="form-control" id="returnVersions" name="Versions">
+            <option value="">-- Select the Number of Versions to Return --</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Return Book</button>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger mt-3">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
+
+@section scripts {
+    <script>
+        $(function () {
+            $('#borrowedBookId').change(function () {
+                var borrowedBookId = $(this).val();
+                if (borrowedBookId) {
+                    $.ajax({
+                        url: '/Book/GetBorrowedVersions',
+                        type: 'GET',
+                        data: { borrowedBookId: borrowedBookId },
+                        success: function (borrowedVersions) {
+                            $('#returnVersions').empty();
+                            if (borrowedVersions.length > 0) {
+                                $.each(borrowedVersions, function (i, version) {
+                                    $('#returnVersions').append($('<option>', {
+                                        value: version,
+                                        text: version
+                                    }));
+                                });
+                            } else {
+                                $('#returnVersions').append($('<option>', {
+                                    value: '',
+                                    text: '-- No Borrowed Versions Available --'
+                                }));
+                            }
+                        }
+                    });
+                } else {
+                    $('#returnVersions').empty();
+                    $('#returnVersions').append($('<option>', {
+                        value: '',
+                        text: '-- Select the Number of Versions to Return --'
+                    }));
+                }
+            });
+        });
+    </script>
+    }
